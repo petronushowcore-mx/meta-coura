@@ -133,10 +133,11 @@ def test_valid_note_and_fixture():
         require(effects[1]["text"] == "row" and effects[1]["target"] == "board", effects)
         require(effects[1]["kind"] == "fixture.append", effects)
         require(not (lab.root / "board").exists(), "target was opened as a path")
-        mode = stat.S_IMODE(lab.store.stat().st_mode)
-        parent = stat.S_IMODE(lab.store.parent.stat().st_mode)
-        require(mode == 0o600, oct(mode))
-        require(parent == 0o700, oct(parent))
+        if os.name == "posix":
+            mode = stat.S_IMODE(lab.store.stat().st_mode)
+            parent = stat.S_IMODE(lab.store.parent.stat().st_mode)
+            require(mode == 0o600, oct(mode))
+            require(parent == 0o700, oct(parent))
 
 
 def test_signature_and_identity():
@@ -406,7 +407,7 @@ def _race_entry(store, address, targets, instant, carrier, barrier, queue):
 
 
 def test_concurrent_receivers():
-    ctx = multiprocessing.get_context("fork")
+    ctx = multiprocessing.get_context("spawn")
     with tempfile.TemporaryDirectory() as folder:
         lab = Lab(folder)
         carrier = lab.sign(lab.body(text="race"))
@@ -898,7 +899,9 @@ def test_store_boundaries():
         subprocess.run([sys.executable, str(ROOT / "meta_coura.py"), "keygen",
                         "--private", str(key_private), "--public", str(key_public)],
                        check=True, cwd=str(ROOT), capture_output=True, timeout=20)
-        require(stat.S_IMODE(key_private.stat().st_mode) == 0o600, oct(key_private.stat().st_mode))
+        if os.name == "posix":
+            mode = stat.S_IMODE(key_private.stat().st_mode)
+            require(mode == 0o600, oct(mode))
         require(len(key_private.read_bytes()) == 32, "private key length")
         again = subprocess.run([sys.executable, str(ROOT / "meta_coura.py"), "keygen",
                                 "--private", str(key_private), "--public", str(key_public)],
