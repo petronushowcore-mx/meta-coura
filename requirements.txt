@@ -1,0 +1,2 @@
+cryptography
+coura @ git+https://github.com/petronushowcore-mx/notification-courier.git@64d6f31de6860c61b001f10743c74cf603a071a8
